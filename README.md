@@ -129,6 +129,26 @@ Agnes provides all of that so you can focus on the parts that make your agent un
 
 ---
 
+## ❓ FAQ
+
+### Is Agnes a multi-agent framework like CrewAI, AutoGen, or LangGraph?
+
+No. Agnes is **not** a multi-agent coordination system.
+
+Agnes is a **server runtime for implementing A2A servers** using Google’s [Agent-to-Agent (A2A) protocol](https://github.com/google/a2a).
+
+You can use any internal logic inside your A2A server — even multi-agent frameworks like CrewAI, AutoGen, LangChain, or your own custom logic. Agnes simply takes care of:
+
+* Handling the A2A JSON-RPC task protocol
+* Providing routes like `/tasks/send`, `/tasks/create`, etc.
+* Managing memory and task state
+* Serving your `.well-known/agent.json`
+* Supporting authentication, config, and modular deployment
+
+The **A2A agent behavior** is up to you.
+
+---
+
 ## ⚙️ Config-Driven by Design
 
 Agnes uses a simple `agnes.config.json` file to declare:
