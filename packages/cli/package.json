@@ -1,6 +1,8 @@
 {
   "name": "@agentopolis/agnes",
-  "version": "1.0.3",
+  "version": "1.0.4",
+  "author": "Ryan Semerau <ryan@agentopolis.com>",
+  "license": "MIT",
   "bin": {
     "agnes": "./dist/index.js"
   },

@@ -1,29 +1,38 @@
 {
   "name": "@agentopolis/agnes-server",
   "version": "1.0.0",
-  "main": "server.js",
+  "description": "Agnes A2A Server Runtime",
+  "main": "dist/server.js",
+  "types": "dist/server.d.ts",
+  "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsup src/server.ts --format esm",
+    "build": "tsup src/server.ts --format esm --dts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "keywords": ["a2a", "agent", "server", "runtime", "framework"],
+  "author": "Ryan Semerau <ryan@agentopolis.com>",
+  "license": "MIT",
   "engines": {
     "node": ">=20.0.0"
   },
   "dependencies": {
     "@agentopolis/agnes-types": "workspace:*",
-    "fastify": "^5.3.2"
+    "fastify": "^4.23.2"
   },
   "devDependencies": {
-    "@types/node": "^22.15.3",
+    "@types/node": "^20.14.13",
     "nodemon": "^3.1.10",
     "tsup": "^8.4.0",
-    "typescript": "^5.8.3",
+    "tsx": "^4.19.4",
+    "typescript": "^5.0.0",
     "vitest": "^3.1.2"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
   }
 }
