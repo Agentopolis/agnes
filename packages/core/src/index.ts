@@ -1,35 +1,23 @@
-// packages/core/src/index.ts
+// src/index.ts
+import Fastify from 'fastify';
 
-import Fastify from "fastify";
+export async function buildServer() {
+  const app = Fastify();
 
-const app = Fastify();
-
-app.post<{ Body: { task: string } }>("/tasks/send", async (request, reply) => {
-  const { task } = request.body;
-
-  // Later: lookup correct agent by route or config
-  const result = {
-    message: {
-      role: "assistant",
-      parts: [{ type: "text", text: "Hello from Agnes 👋" }]
-    }
-  };
-
-  reply.send(result);
-});
-
-app.get("/.well-known/agent.json", async (req, reply) => {
-  reply.send({
-    id: "agent://hello.agentopolis.ai",
-    name: "Example Agent",
-    version: "1.0.0"
+  app.get('/.well-known/agent.json', async (_, reply) => {
+    reply.send({ name: 'Test Agent' });
   });
-});
 
-app.listen({ port: 3000 }, (err, address) => {
-  if (err) {
-    console.error(err);
-    process.exit(1);
-  }
-  console.log(`Agnes running at ${address}`);
-});
+  return app;
+}
+
+// If run directly from CLI, start the server
+if (import.meta.url === process.argv[1] || import.meta.url === `file://${process.argv[1]}`) {
+
+  buildServer().then(app => {
+    app.listen({ port: 3000 }, err => {
+      if (err) throw err;
+      console.log("Agnes running at http://localhost:3000");
+    });
+  });
+}

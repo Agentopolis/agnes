@@ -4,7 +4,9 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsup src/index.ts --watch --format esm & nodemon dist/index.mjs",
-    "build": "tsup src/index.ts --format esm"
+    "build": "tsup src/index.ts --format esm",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [],
   "author": "",
