@@ -5,11 +5,46 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import Fastify, { type FastifyInstance, type FastifyRequest, type FastifyReply } from 'fastify';
 import type { Agent, AgentContext, SendRequest, SendResponse, Message } from '@agentopolis/agnes-types';
 
+// Helper function to parse CLI args simply
+function getConfigPathFromArgs(argv: string[]): string | undefined {
+  // Look for --config=value or -c=value first
+  const configEqualsArg = argv.find(arg => arg.startsWith('--config=') || arg.startsWith('-c='));
+  if (configEqualsArg) {
+    const configPath = configEqualsArg.split('=')[1];
+    if (configPath) {
+        return path.resolve(process.cwd(), configPath);
+    }
+  }
+
+  // Then look for --config value or -c value
+  const configFlagIndex = argv.findIndex(arg => arg === '--config' || arg === '-c');
+  if (configFlagIndex !== -1 && argv.length > configFlagIndex + 1) {
+    // Ensure the next argument isn't another flag
+    if (!argv[configFlagIndex + 1].startsWith('-')) {
+         return path.resolve(process.cwd(), argv[configFlagIndex + 1]);
+    }
+  }
+
+  return undefined;
+}
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const configPath = path.resolve(process.cwd(), 'agnes.config.json');
-console.log(`📄 Loading config from: ${configPath}`);
+
+// Determine config path: check CLI args first, then default
+const cliConfigPath = getConfigPathFromArgs(process.argv);
+// Default path is now relative to the *server script's directory*
+// Use path.join to be safe across OS, go up one level from __dirname (src/ or dist/)
+const defaultPath = path.join(__dirname, '..', 'agnes.config.json'); 
+const configPath = cliConfigPath || defaultPath;
+
+console.log(`📄 Attempting to load config from: ${configPath}`);
 if (!fs.existsSync(configPath)) {
   console.error(`❌ Config file not found at ${configPath}`);
+  if (cliConfigPath) {
+     console.error(`   (Tried path from command line: ${cliConfigPath})`);
+  } else {
+      console.error(`   (Looked for default config relative to server location: ${defaultPath})`);
+  }
   process.exit(1);
 }
 const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));

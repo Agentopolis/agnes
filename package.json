@@ -3,11 +3,11 @@
   "private": true,
   "scripts": {
     "dev:server": "pnpm --filter @agentopolis/agnes-server dev",
-    "dev": "pnpm run dev:server",
+    "dev": "pnpm --filter @agentopolis/agnes-server exec tsx watch src/server.ts",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "lint": "echo \"Linting not yet configured\"",
-    "start": "pnpm run build && node packages/server/dist/server.mjs",
+    "start": "pnpm run build && tsx packages/server/dist/server.mjs --config $(pwd)/packages/server/agnes.config.json",
     "clean": "pnpm -r --parallel exec rm -rf dist node_modules && rm -rf node_modules"
   },
   "devDependencies": {
@@ -17,6 +17,7 @@
     "supertest": "^7.1.0",
     "vitest": "^3.1.2",
     "typescript": "^5.8.3",
-    "tsup": "^8.4.0"
+    "tsup": "^8.4.0",
+    "tsx": "^4.19.4"
   }
 }
