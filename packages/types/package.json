@@ -1,6 +1,6 @@
 {
   "name": "@agentopolis/agnes-types",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Ryan Semerau <ryan@agentopolis.com>",
   "license": "MIT",
   "description": "Shared TypeScript types for the Agnes A2A framework",
