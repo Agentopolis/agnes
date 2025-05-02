@@ -36,6 +36,20 @@ if (agnesConfig.agents && agnesConfig.agents.length > 0) {
   console.log('🧐 No agents defined in config file.');
 }
 
+// Define a basic type for the expected request body
+interface TaskRequestBody {
+  id?: string | number | null;
+  params?: {
+    id?: string;
+    task?: { id?: string }; // Check both locations for taskId
+    message?: Message;
+  };
+  task?: { // Also check if task is directly under body
+    id?: string;
+    message?: Message;
+  }
+}
+
 // Function to load and mount agents
 async function loadAgents(app: FastifyInstance, config: AgnesConfigFile, configDir: string) {
   if (!config.agents || config.agents.length === 0) {
@@ -87,7 +101,7 @@ async function loadAgents(app: FastifyInstance, config: AgnesConfigFile, configD
         url: `${agentBasePath}/tasks/send`, // Simplified URL for now
         version: agentDefinition.version || '1.0.0',
         capabilities: agentDefinition.capabilities || {},
-        authentication: agentDefinition.auth === 'required' ? { schemes: ['api_key'] } : null, // Basic example
+        authentication: agentDefinition.authentication || null,
         skills: agentDefinition.skills || [],
       };
 
@@ -98,8 +112,9 @@ async function loadAgents(app: FastifyInstance, config: AgnesConfigFile, configD
       // --- Mount /tasks/send --- 
       // TODO: Implement full JSON-RPC request/response handling & validation
       app.post(`${agentBasePath}/tasks/send`, async (request: FastifyRequest, reply: FastifyReply) => {
-        const body = request.body as any; // Assume body is parsed JSON
-        const taskId = body?.params?.id || body?.task?.id || `task-${Date.now()}`;
+        const body = request.body as TaskRequestBody; 
+        // More robust extraction needed here based on actual JSON-RPC structure
+        const taskId = body?.params?.id || body?.params?.task?.id || body?.task?.id || `task-${Date.now()}`; 
         const message = body?.params?.message || body?.task?.message;
         
         if (!taskId || !message) {
@@ -132,9 +147,11 @@ async function loadAgents(app: FastifyInstance, config: AgnesConfigFile, configD
           };
           reply.send({ jsonrpc: "2.0", result, id: body?.id || null });
 
-        } catch (error: any) {
+        } catch (error: unknown) {
           ctx.logger.error(`Error processing task ${taskId} for agent ${agentEntry.id}:`, error);
-          reply.status(500).send({ jsonrpc: "2.0", error: { code: -32603, message: "Internal server error", data: error.message }, id: body?.id || null });
+          // Check if it's an Error object before accessing message
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          reply.status(500).send({ jsonrpc: "2.0", error: { code: -32603, message: "Internal server error", data: errorMessage }, id: body?.id || null });
         }
       });
 
@@ -142,8 +159,12 @@ async function loadAgents(app: FastifyInstance, config: AgnesConfigFile, configD
 
       console.log(`    ✅ Agent '${agentEntry.id}' mounted successfully.`);
 
-    } catch (error: any) {
-      console.error(`    ❌ Failed to load or mount agent '${agentEntry.id}':`, error);
+    } catch (error: unknown) {
+      // Check if it's an Error object before accessing message
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`    ❌ Failed to load or mount agent '${agentEntry.id}':`, errorMessage);
+      // Optionally log the full error object too for debugging
+      // console.error(error);
     }
   }
   console.log("\n🏁 Agent loading complete.");
