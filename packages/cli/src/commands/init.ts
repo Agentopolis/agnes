@@ -14,7 +14,8 @@ export async function init(agentName: string) {
 
   await fs.mkdirp(targetDir);
 
-  const templateDir = path.resolve(__dirname, '../../templates/faq-agent');
+  const templateDir = path.resolve(__dirname, '../../templates/example');
+
   await fs.copy(templateDir, targetDir);
 
   console.log(`✅ Agent "${agentName}" created!`);
