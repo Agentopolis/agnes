@@ -32,3 +32,5 @@ coverage/
 
 # Agnes temp or dev
 .agnes/
+
+examples/

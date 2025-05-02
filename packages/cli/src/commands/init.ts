@@ -1,6 +1,7 @@
 import path from 'node:path';
 import fs from 'fs-extra';
 import { fileURLToPath } from 'node:url';
+import { execSync } from 'node:child_process';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -17,6 +18,12 @@ export async function init(agentName: string) {
   const templateDir = path.resolve(__dirname, '../../templates/example');
 
   await fs.copy(templateDir, targetDir);
+
+  console.log('📦 Installing dependencies...');
+  execSync('npm install @agentopolis/agnes-core', {
+    cwd: targetDir,
+    stdio: 'inherit'
+  });
 
   console.log(`✅ Agent "${agentName}" created!`);
 }
