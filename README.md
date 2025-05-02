@@ -57,7 +57,7 @@ Want to run just one agent? Just include one entry in the list and assign it a r
 
 ### 🔧 Install dependencies
 
-> 💡 If you don’t have `pnpm` installed, run `npm install -g pnpm` first. Or see [pnpm.io](https://pnpm.io) for alternative installation methods.
+> 💡 If you don't have `pnpm` installed, run `npm install -g pnpm` first. Or see [pnpm.io](https://pnpm.io) for alternative installation methods.
 
 ```bash
 pnpm install
@@ -65,17 +65,22 @@ pnpm install
 
 ### ▶️ Run the development server
 
+Ensure your `agnes.config.json` file is present in the project root (the directory where you run the command). This file tells Agnes which agents to load.
+
 ```bash
+# Run from the project root
 pnpm dev
 ```
 
-This runs the Agnes core server with live reload.
+This runs the Agnes development server (typically with hot-reload), loading agents specified in `agnes.config.json`.
 
 ### 🚀 Run the production server
 
+This command first builds all necessary packages and then starts the production server.
+
 ```bash
-pnpm build
-node dist/index.mjs
+# Run from the project root
+pnpm start
 ```
 
 ### 🧪 Run tests
@@ -135,7 +140,7 @@ Agnes provides all of that so you can focus on the parts that make your agent un
 
 No. Agnes is **not** a multi-agent coordination system.
 
-Agnes is a **server runtime for implementing A2A servers** using Google’s [Agent-to-Agent (A2A) protocol](https://github.com/google/a2a).
+Agnes is a **server runtime for implementing A2A servers** using Google's [Agent-to-Agent (A2A) protocol](https://github.com/google/a2a).
 
 You can use any internal logic inside your A2A server — even multi-agent frameworks like CrewAI, AutoGen, LangChain, or your own custom logic. Agnes simply takes care of:
 

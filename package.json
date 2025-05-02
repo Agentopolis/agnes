@@ -3,9 +3,11 @@
   "private": true,
   "scripts": {
     "dev:server": "pnpm --filter @agentopolis/agnes-server dev",
+    "dev": "pnpm run dev:server",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "lint": "echo \"Linting not yet configured\"",
+    "start": "pnpm run build && node packages/server/dist/server.mjs",
     "clean": "pnpm -r --parallel exec rm -rf dist node_modules && rm -rf node_modules"
   },
   "devDependencies": {
