@@ -1,0 +1,10 @@
+{
+    "agents": [
+      {
+        "id": "faq",
+        "path": "../../examples/faq-agent",
+        "route": "/faq"
+      }
+    ]
+  }
+  

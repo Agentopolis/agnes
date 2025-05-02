@@ -1,4 +1,4 @@
-import { defineAgent } from '@agentopolis/agnes-core';
+import { defineAgent } from '@agentopolis/agnes-server';
 import handlers from './handlers.ts';
 
 export default defineAgent({

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
-import { buildServer } from './index';
+import { buildServer } from './server';
 
 describe('Agnes core API', () => {
   it('should return an agent card', async () => {

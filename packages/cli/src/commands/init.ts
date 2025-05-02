@@ -20,7 +20,7 @@ export async function init(agentName: string) {
   await fs.copy(templateDir, targetDir);
 
   console.log('📦 Installing dependencies...');
-  execSync('npm install @agentopolis/agnes-core', {
+  execSync('npm install @agentopolis/agnes-server', {
     cwd: targetDir,
     stdio: 'inherit'
   });
