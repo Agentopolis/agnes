@@ -1,0 +1,22 @@
+{
+  "name": "core",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsup src/index.ts --watch --format esm & nodemon dist/index.mjs",
+    "build": "tsup src/index.ts --format esm"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "fastify": "^5.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "nodemon": "^3.1.10",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.3"
+  }
+}
