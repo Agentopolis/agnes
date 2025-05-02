@@ -1,6 +1,6 @@
 {
   "name": "@agentopolis/agnes-server",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Agnes A2A Server Runtime",
   "main": "dist/server.js",
   "types": "dist/server.d.ts",
@@ -18,7 +18,7 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
-    "@agentopolis/agnes-types": "workspace:*",
+    "@agentopolis/agnes-types": "~1.0.0",
     "fastify": "^4.23.2"
   },
   "devDependencies": {
