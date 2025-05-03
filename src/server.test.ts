@@ -4,7 +4,7 @@ import { A2AServer } from './server';
 
 describe('Agnes A2A Server', () => {
   let server: A2AServer;
-  const TEST_PORT = 3001; // Using a different port than the dev server
+  const TEST_PORT = 5555; // Using a different port than the dev server
 
   beforeAll(async () => {
     // Create and start the server for testing
