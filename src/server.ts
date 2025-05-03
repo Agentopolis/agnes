@@ -115,29 +115,7 @@ export class A2AServer {
     // 1. Explicitly set BASE_URL (highest priority)
     // 2. Auto-detect Heroku environment (use HOST or actual app URL)
     // 3. Fall back to localhost for development
-    let detectedBaseUrl = `http://localhost:${this.port}`;
-    
-    // Check if running on Heroku (presence of DYNO env var)
-    if (process.env.DYNO) {
-      // On Heroku, use one of these approaches (in order of preference):
-      // 1. The HOST environment variable (most reliable as it contains the actual host)
-      // 2. The HEROKU_APP_URL if set (some CI/CD workflows set this)
-      // 3. Assume standard pattern with app name
-      if (process.env.HOST) {
-        // Get the host from Heroku's HOST env var, which will include the unique ID
-        const host = process.env.HOST;
-        detectedBaseUrl = `https://${host}`;
-        console.log(`Detected Heroku host: ${detectedBaseUrl}`);
-      } else if (process.env.HEROKU_APP_URL) {
-        detectedBaseUrl = process.env.HEROKU_APP_URL;
-        console.log(`Using HEROKU_APP_URL: ${detectedBaseUrl}`);
-      } else {
-        const appName = process.env.HEROKU_APP_NAME || 'agnes-demos';
-        detectedBaseUrl = `https://${appName}.herokuapp.com`;
-        console.log(`⚠️ Using basic Heroku URL pattern - this may not include unique suffixes: ${detectedBaseUrl}`);
-        console.log('If the URL is incorrect, set BASE_URL directly in your Heroku config vars.');
-      }
-    }
+    const detectedBaseUrl = `http://localhost:${this.port}`;
     
     this.baseUrl = process.env.BASE_URL || detectedBaseUrl;
   }
