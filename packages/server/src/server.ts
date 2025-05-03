@@ -28,6 +28,11 @@ function getConfigPathFromArgs(argv: string[]): string | undefined {
   return undefined;
 }
 
+// Helper function to check if no-exit flag is present
+function hasNoExitFlag(argv: string[]): boolean {
+  return argv.some(arg => arg === '--no-exit' || arg === '--no-exit=true');
+}
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Determine config path: check CLI args first, then default
@@ -37,7 +42,12 @@ const cliConfigPath = getConfigPathFromArgs(process.argv);
 const defaultPath = path.join(__dirname, '..', 'agnes.config.json'); 
 const configPath = cliConfigPath || defaultPath;
 
+// Check if no-exit flag is set
+const noExit = hasNoExitFlag(process.argv);
+
 console.log(`📄 Attempting to load config from: ${configPath}`);
+let config: AgnesConfigFile = { agents: [] }; // Default empty config
+
 if (!fs.existsSync(configPath)) {
   console.error(`❌ Config file not found at ${configPath}`);
   if (cliConfigPath) {
@@ -45,9 +55,17 @@ if (!fs.existsSync(configPath)) {
   } else {
       console.error(`   (Looked for default config relative to server location: ${defaultPath})`);
   }
-  process.exit(1);
+  
+  if (!noExit) {
+    console.error('   Use --no-exit flag to run the server without exiting when there is a problem with the config file');
+    process.exit(1);
+  } else {
+    console.warn('   Running with --no-exit flag. Server will not exit if there are problems with the config file.');
+  }
+} else {
+  // Load the config file if it exists
+  config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
 }
-const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
 
 // Define expected structure for type safety
 interface AgentConfigEntry {
@@ -205,8 +223,8 @@ async function loadAgents(app: FastifyInstance, config: AgnesConfigFile, configD
   console.log("\n🏁 Agent loading complete.");
 }
 
-// Get the directory containing the config file
-const configDir = path.dirname(configPath);
+// Get the directory containing the config file, or a fallback if running with no-exit
+const configDir = fs.existsSync(configPath) ? path.dirname(configPath) : process.cwd();
 
 export async function buildServer() {
   const app = Fastify();
@@ -226,7 +244,7 @@ export async function buildServer() {
 if (import.meta.url === process.argv[1] || import.meta.url === `file://${process.argv[1]}`) {
 
   buildServer().then(app => {
-    app.listen({ port: 3000 }, err => {
+    app.listen({ port: 3000, host: '0.0.0.0' }, err => {
       if (err) throw err;
       console.log("Agnes running at http://localhost:3000");
     });

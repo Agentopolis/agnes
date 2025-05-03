@@ -91,7 +91,7 @@ pnpm start
 *   **Custom Config:** To use a different configuration file, pass the `--config` flag after `--`:
     ```bash
     pnpm start -- --config path/to/your-config.json
-    ```
+```
 
 ### 🧪 Run tests
 
