@@ -1,7 +1,0 @@
-    packages:
-      # include packages in subfolders of packages/
-      - 'packages/*'
-      # include examples directory
-      - 'examples/*'
-      # optionally include other directories if needed
-      # - 'examples/*'
