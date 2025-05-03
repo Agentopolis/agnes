@@ -78,6 +78,59 @@ Loaded agents:
 Ready to receive requests...
 ```
 
+## 🐳 Docker Deployment
+
+Agnes can be easily deployed using Docker:
+
+```bash
+# Build the Docker image
+npm run docker:build
+
+# Run the Docker container
+npm run docker:run
+
+# Stop the Docker container
+npm run docker:stop
+```
+
+The Docker container will use the `.env` file in the project root for configuration if available.
+
+## ☁️ Heroku Deployment
+
+Agnes can also be deployed to Heroku using Docker containers:
+
+### Setup for Heroku
+
+Before deploying to Heroku, create a `.env.heroku` file in the project root with the following content:
+
+```
+# Heroku deployment settings
+HEROKU_APP_NAME=your-heroku-app-name
+BASE_URL=https://your-heroku-app-name.herokuapp.com
+```
+
+**Important:** The `BASE_URL` must be your actual Heroku app URL, including any unique identifier that Heroku assigns (e.g., `https://agnes-demos-edb428e5168c.herokuapp.com`).
+
+### Deployment Commands
+
+```bash
+# Deploy to Heroku (builds, sets config, pushes, and releases)
+npm run heroku:deploy
+
+# Individual steps if needed:
+npm run heroku:config   # Set the BASE_URL in Heroku config
+npm run heroku:push     # Build and push the Docker container
+npm run heroku:release  # Release the container
+```
+
+The deployment process:
+1. Builds the TypeScript application
+2. Sets environment variables in Heroku (especially the crucial BASE_URL)
+3. Pushes the Docker container to Heroku
+4. Releases the application
+
+**Note:** Agnes no longer tries to guess the Heroku URL - it relies entirely on the `BASE_URL` environment variable, which must be correctly set to enable agent endpoints and proper agent card URLs.
+
 ## 👷‍♀️ Creating new agents
 
 Agents are located in the `src/agents` directory. Each agent has its own subdirectory with an `index.ts` file that exports an agent object.
