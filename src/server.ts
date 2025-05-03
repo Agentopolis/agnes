@@ -111,8 +111,20 @@ export class A2AServer {
     this.port = options.port || 
                 (process.env.PORT ? Number.parseInt(process.env.PORT, 10) : 3000);
     
-    // Set the base URL for agent cards
-    this.baseUrl = process.env.BASE_URL || `http://localhost:${this.port}`;
+    // Determine the base URL:
+    // 1. Explicitly set BASE_URL (highest priority)
+    // 2. Auto-detect Heroku environment (use HEROKU_APP_NAME if available)
+    // 3. Fall back to localhost for development
+    let detectedBaseUrl = `http://localhost:${this.port}`;
+    
+    // Check if running on Heroku (presence of DYNO env var)
+    if (process.env.DYNO) {
+      const appName = process.env.HEROKU_APP_NAME || 'agnes-demos';
+      detectedBaseUrl = `https://${appName}.herokuapp.com`;
+      console.log(`Detected Heroku environment. Using base URL: ${detectedBaseUrl}`);
+    }
+    
+    this.baseUrl = process.env.BASE_URL || detectedBaseUrl;
   }
 
   private async handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
@@ -611,7 +623,8 @@ export class A2AServer {
     // Override the default port if specified
     if (port !== undefined) {
       this.port = port;
-      // Update the base URL to match the new port
+      
+      // Only update baseUrl if it's set to localhost (don't override Heroku URLs)
       if (this.baseUrl.includes('localhost')) {
         this.baseUrl = `http://localhost:${this.port}`;
       }
@@ -627,7 +640,7 @@ export class A2AServer {
         console.log('Loaded agents:');
         
         for (const agent of Object.values(this.agents)) {
-          // Convert agent:// URLs to relative or base URLs without assumptions
+          // Get agent URL using the same logic as generateAgentCard for consistency
           const agentIdentifier = agent.id.replace('agent://', '');
           const agentUrl = this.baseUrl === '/' 
             ? `/${agentIdentifier}` 
@@ -672,13 +685,18 @@ export async function buildServer(): Promise<Server> {
 if (require.main === module) {
   // Simple command-line argument parsing
   const args = process.argv.slice(2);
-  let port = 3000; // Default port
   
-  // Parse --port argument
+  // First check for PORT environment variable (Heroku sets this)
+  let port = process.env.PORT ? Number.parseInt(process.env.PORT, 10) : 3000; 
+  
+  // Then check for --port argument, which overrides the environment variable
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--port' && i + 1 < args.length) {
-      port = Number.parseInt(args[i + 1], 10);
-      if (Number.isNaN(port)) {
+      const parsedPort = Number.parseInt(args[i + 1], 10);
+      if (!Number.isNaN(parsedPort)) {
+        port = parsedPort;
+        console.log(`Overriding PORT env var with command line argument: ${port}`);
+      } else {
         console.error(`Invalid port number: ${args[i + 1]}`);
         process.exit(1);
       }
@@ -686,9 +704,12 @@ if (require.main === module) {
     }
   }
   
-  debugLog(`Starting server on port ${port}`);
-  const server = new A2AServer();
-  server.start(port).catch(err => {
+  // Set NODE_ENV to production if not already set
+  process.env.NODE_ENV = process.env.NODE_ENV || 'production';
+  
+  console.log(`Starting server on port ${port} in ${process.env.NODE_ENV} mode`);
+  const server = new A2AServer({ port });
+  server.start().catch(err => {
     console.error('Failed to start server:', err);
     process.exit(1);
   });

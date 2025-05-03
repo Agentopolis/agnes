@@ -5,7 +5,7 @@
     "build": "tsc",
     "dev": "tsx src/server.ts --port 7777",
     "dev:watch": "nodemon --watch src --ext ts,json --exec 'tsx src/server.ts --port 7777'",
-    "start": "NODE_ENV=production node dist/server.js",
+    "start": "node dist/server.js",
     "test": "vitest",
     "test:all": "vitest run",
     "test:client": "vitest run src/test/ai-client.test.ts",
