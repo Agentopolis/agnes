@@ -57,6 +57,15 @@ interface AgentRegistry {
   [agentId: string]: Agent;
 }
 
+// Add this enhanced debug logging function near the top of the file
+function debugLog(message: string, data?: unknown): void {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] ${message}`);
+  if (data) {
+    console.log(JSON.stringify(data, null, 2));
+  }
+}
+
 // Function to read the raw request body as a string
 function getRawBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -82,25 +91,65 @@ export class A2AServer {
   private server: Server;
   private agents: AgentRegistry = {};
   private tasks: TaskStorage = {};
+  private port: number;
+  private baseUrl: string;
 
-  constructor() {
+  constructor(options: { port?: number } = {}) {
     this.server = http.createServer(this.handleRequest.bind(this));
+    
+    // Set the port with priority:
+    // 1. Constructor option
+    // 2. PORT environment variable
+    // 3. Default (3000)
+    this.port = options.port || 
+                (process.env.PORT ? Number.parseInt(process.env.PORT, 10) : 3000);
+    
+    // Set the base URL for agent cards
+    this.baseUrl = process.env.BASE_URL || `http://localhost:${this.port}`;
   }
 
   private async handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const url = req.url || '/';
     const method = req.method?.toUpperCase() || 'GET';
-
-    console.log(`${method} ${url}`);
+    
+    // Enhanced request logging
+    debugLog(`${method} ${url}`, {
+      headers: req.headers,
+      remoteAddress: req.socket.remoteAddress
+    });
     
     res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    // Handle CORS preflight requests
+    if (method === 'OPTIONS') {
+      res.statusCode = 204;
+      res.end();
+      return;
+    }
     
     try {
-      if (method === 'POST' && url === '/rpc') {
+      // Check if it's an RPC request - be permissive with URL paths
+      if (method === 'POST' && (
+          url === '/rpc' || 
+          url.includes('/task/') || 
+          url.includes('/message/') ||
+          url.includes('/conversation/') ||
+          // Add support for agent-specific endpoints like /hello
+          this.isAgentEndpoint(url)
+        )) {
+        debugLog(`Treating as RPC request: ${url}`);
         await this.handleRpcRequest(req, res);
-      } else if (method === 'GET' && url.includes('/.well-known/agent.json')) {
+      } 
+      // Check for agent card requests
+      else if (method === 'GET' && url.includes('/.well-known/agent.json')) {
         await this.handleAgentCard(req, res);
-      } else {
+      } 
+      // Handle any other request
+      else {
+        debugLog(`Route not found: ${method} ${url}`);
         res.statusCode = 404;
         res.end(JSON.stringify({ error: 'Not Found' }));
       }
@@ -116,13 +165,33 @@ export class A2AServer {
     }
   }
   
+  // Helper method to check if a URL path corresponds to an agent endpoint
+  private isAgentEndpoint(url: string): boolean {
+    // Extract the agent identifier from the URL path
+    // For paths like "/hello" or "/hello/"
+    const pathParts = url.split('/').filter(Boolean);
+    if (pathParts.length === 0) return false;
+    
+    const agentIdentifier = pathParts[0];
+    
+    // Check if this agent identifier exists in our registry
+    return Object.keys(this.agents).some(id => {
+      const idParts = id.replace('agent://', '');
+      return idParts === agentIdentifier;
+    });
+  }
+  
   private async handleRpcRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
     let rpcRequest: JsonRpcRequest;
     
     try {
       const body = await getRawBody(req);
+      debugLog('Received raw request body:', body);
+      
       rpcRequest = JSON.parse(body);
+      debugLog('Parsed JSON-RPC request:', rpcRequest);
     } catch (err) {
+      debugLog('Failed to parse JSON request', err);
       const response = this.createErrorResponse(null, ErrorCodes.PARSE_ERROR, 'Invalid JSON payload');
       res.statusCode = 400;
       res.end(JSON.stringify(response));
@@ -262,12 +331,15 @@ export class A2AServer {
   
   private async handleTaskSend(id: string | number | null, agent: Agent, params?: Record<string, unknown>): Promise<JsonRpcResponse> {
     if (!params || !params.id || !params.message) {
+      debugLog('Invalid task/send params', params);
       return this.createErrorResponse(id, ErrorCodes.INVALID_PARAMS, 'Missing required parameters');
     }
     
     const taskId = params.id as string;
     const message = params.message as Message;
     const sessionId = params.sessionId as string | undefined;
+    
+    debugLog(`Processing task/send for taskId=${taskId}, sessionId=${sessionId || 'none'}`, message);
     
     try {
       // Create a task if it doesn't exist
@@ -415,10 +487,13 @@ export class A2AServer {
   
   private generateAgentCard(agent: Agent) {
     // Generate an A2A compatible agent card
+    // Extract agent identifier from the agent:// URI
+    const agentIdentifier = agent.id.replace('agent://', '');
+    
     return {
       name: agent.name,
       description: agent.description ?? null,
-      url: agent.id, // Using agent.id as the URL
+      url: agent.id, // Use the original agent ID for test compatibility
       version: agent.version ?? '1.0.0',
       provider: agent.provider ?? null,
       documentationUrl: agent.documentationUrl ?? null,
@@ -472,10 +547,32 @@ export class A2AServer {
   }
   
   // Start the server
-  public async start(port = 3000): Promise<void> {
+  public async start(port?: number): Promise<void> {
+    // Override the default port if specified
+    if (port !== undefined) {
+      this.port = port;
+      // Update the base URL to match the new port
+      if (this.baseUrl.includes('localhost')) {
+        this.baseUrl = `http://localhost:${this.port}`;
+      }
+    }
+    
     await this.loadAgents();
-    this.server.listen(port, () => {
-      console.log(`A2A Server is running at http://localhost:${port}`);
+    
+    return new Promise<void>((resolve) => {
+      this.server.listen(this.port, () => {
+        console.log('\n==================================');
+        console.log(`👵 Agnes is running at ${this.baseUrl}`);
+        console.log('==================================\n');
+        console.log('Loaded agents:');
+        
+        for (const agent of Object.values(this.agents)) {
+          console.log(`- ${agent.name} (${agent.id})`);
+        }
+        
+        console.log('\nReady to receive requests...\n');
+        resolve();
+      });
     });
   }
   
@@ -507,8 +604,25 @@ export async function buildServer(): Promise<Server> {
 
 // Start the server if this file is executed directly
 if (require.main === module) {
+  // Simple command-line argument parsing
+  const args = process.argv.slice(2);
+  let port = 3000; // Default port
+  
+  // Parse --port argument
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--port' && i + 1 < args.length) {
+      port = Number.parseInt(args[i + 1], 10);
+      if (Number.isNaN(port)) {
+        console.error(`Invalid port number: ${args[i + 1]}`);
+        process.exit(1);
+      }
+      break;
+    }
+  }
+  
+  debugLog(`Starting server on port ${port}`);
   const server = new A2AServer();
-  server.start().catch(err => {
+  server.start(port).catch(err => {
     console.error('Failed to start server:', err);
     process.exit(1);
   });

@@ -3,13 +3,16 @@
   "private": true,
   "scripts": {
     "build": "tsc",
-    "dev": "tsx src/server.ts",
+    "dev": "tsx src/server.ts --port 7777",
+    "dev:watch": "nodemon --watch src --ext ts,json --exec 'tsx src/server.ts --port 7777'",
     "start": "node dist/server.js",
     "test": "vitest",
     "test:all": "vitest run",
     "test:client": "vitest run src/test/ai-client.test.ts",
     "test:agents": "vitest run src/test/agents/",
     "test:server": "vitest run src/test/server.test.ts",
+    "test:config": "vitest run src/test/server-config.test.ts",
+    "test:spec": "vitest run src/test/a2a-spec.test.ts",
     "client:demo": "tsx src/clients/run-client.ts"
   },
   "devDependencies": {
@@ -18,6 +21,7 @@
     "@vitest/coverage-v8": "^3.1.2",
     "axios": "^1.6.8",
     "c8": "^10.1.3",
+    "nodemon": "^3.1.0",
     "supertest": "^7.1.0",
     "vitest": "^3.1.2",
     "typescript": "^5.8.3",
