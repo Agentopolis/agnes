@@ -17,8 +17,10 @@
     "docker:build": "docker build -t agnes-server .",
     "docker:run": "docker run --rm --name agnes-server-container -p 7777:7777 --env-file .env agnes-server",
     "docker:stop": "docker stop agnes-server-container || true",
-    "heroku:push": "env-cmd -f .env sh -c 'heroku container:login && heroku stack:set container --app ${HEROKU_APP_NAME} && heroku container:push web --app ${HEROKU_APP_NAME}'",
-    "heroku:release": "env-cmd -f .env sh -c 'heroku container:release web --app ${HEROKU_APP_NAME}'"
+    "heroku:push": "env-cmd -f .env.heroku sh -c 'heroku container:login && heroku stack:set container --app ${HEROKU_APP_NAME} && heroku container:push web --app ${HEROKU_APP_NAME}'",
+    "heroku:release": "env-cmd -f .env.heroku sh -c 'heroku container:release web --app ${HEROKU_APP_NAME}'",
+    "heroku:config": "env-cmd -f .env.heroku sh -c 'heroku config:set BASE_URL=${BASE_URL} --app ${HEROKU_APP_NAME}'",
+    "heroku:deploy": "npm run build && npm run heroku:config && npm run heroku:push && npm run heroku:release"
   },
   "devDependencies": {
     "@types/node": "^20.11.30",

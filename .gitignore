@@ -17,6 +17,7 @@ packages/**/build/
 # Local env/config
 .env
 .env.*.local
+.env.heroku
 
 # IDEs
 .vscode/
