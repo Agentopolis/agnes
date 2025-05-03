@@ -1,0 +1,18 @@
+# Heroku configuration file for Docker deployment
+setup:
+  # Optional: Define any addons needed here
+  # addons:
+  #   - plan: heroku-postgresql
+  config:
+    # You can set non-sensitive default config vars here if needed
+    # BASE_URL: https://your-app-name.herokuapp.com # Example
+    # Or rely on Heroku dashboard/CLI for setting these
+build:
+  docker:
+    web: Dockerfile
+    # If you had other Dockerfiles for other process types (e.g., worker):
+    # worker: Dockerfile.worker
+run:
+  web: npm start
+  # If you had other process types:
+  # worker: node dist/worker.js 
