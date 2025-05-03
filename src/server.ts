@@ -210,10 +210,29 @@ export class A2AServer {
       return;
     }
     
-    // Extract agent ID from the request path or headers
-    // For simplicity in testing, use the first available agent if none specified
+    // Try to extract agent ID from the URL path first
+    const url = req.url || '/';
+    let extractedAgentId: string | null = null;
+    
+    // Check if this is an agent-specific endpoint request
+    if (this.isAgentEndpoint(url)) {
+      const pathParts = url.split('/').filter(Boolean);
+      if (pathParts.length > 0) {
+        const agentIdentifier = pathParts[0];
+        // Find agent with this identifier
+        const matchingAgent = Object.keys(this.agents).find(id => {
+          return id.replace('agent://', '') === agentIdentifier;
+        });
+        
+        if (matchingAgent) {
+          extractedAgentId = matchingAgent;
+        }
+      }
+    }
+    
+    // Use the extracted agent ID or fall back to header or first available
     const headerAgentId = req.headers['x-agent-id'] as string;
-    const agentId = headerAgentId || Object.keys(this.agents)[0];
+    const agentId = extractedAgentId || headerAgentId || Object.keys(this.agents)[0];
     
     if (!agentId) {
       const response = this.createErrorResponse(
@@ -291,14 +310,11 @@ export class A2AServer {
       const agentId = match[1];
       
       // Find the agent by ID or by the 'agent://' prefix
-      let agent = this.agents[agentId];
+      let agent = this.agents[`agent://${agentId}`];
       if (!agent) {
-        // Try to find by matching the last part of the agent:// URI
+        // Try with agent:// prefix if agent not found directly
         const fullAgentId = `agent://${agentId}`;
-        const foundAgent = Object.values(this.agents).find(a => a.id === fullAgentId);
-        if (foundAgent) {
-          agent = foundAgent;
-        }
+        agent = this.agents[fullAgentId];
       }
       
       if (!agent) {
@@ -329,6 +345,30 @@ export class A2AServer {
     };
   }
   
+  private async handleTaskGet(id: string | number | null, params?: Record<string, unknown>): Promise<JsonRpcResponse> {
+    if (!params || !params.id) {
+      return this.createErrorResponse(id, ErrorCodes.INVALID_PARAMS, 'Missing task ID');
+    }
+    
+    const taskId = params.id as string;
+    const task = this.tasks[taskId];
+    
+    if (!task) {
+      return this.createErrorResponse(id, ErrorCodes.TASK_NOT_FOUND, 'Task not found');
+    }
+    
+    // Ensure history is always present, even if empty
+    if (!task.history) {
+      task.history = [];
+    }
+    
+    return {
+      jsonrpc: '2.0',
+      id,
+      result: task
+    };
+  }
+  
   private async handleTaskSend(id: string | number | null, agent: Agent, params?: Record<string, unknown>): Promise<JsonRpcResponse> {
     if (!params || !params.id || !params.message) {
       debugLog('Invalid task/send params', params);
@@ -354,6 +394,11 @@ export class A2AServer {
           },
           history: []
         };
+      }
+      
+      // Ensure history is always present
+      if (!this.tasks[taskId].history) {
+        this.tasks[taskId].history = [];
       }
       
       // Update task status to working
@@ -395,12 +440,13 @@ export class A2AServer {
           result: {
             id: taskId,
             status: this.tasks[taskId].status,
+            history: this.tasks[taskId].history, // Explicitly include history
             artifacts: [
               {
                 parts: [
                   {
                     type: 'text',
-                    text: JSON.stringify(response.message)
+                    text: response.message.parts[0].text // Just use the text directly
                   }
                 ]
               }
@@ -433,25 +479,6 @@ export class A2AServer {
         `Internal error: ${(error as Error).message}`
       );
     }
-  }
-  
-  private async handleTaskGet(id: string | number | null, params?: Record<string, unknown>): Promise<JsonRpcResponse> {
-    if (!params || !params.id) {
-      return this.createErrorResponse(id, ErrorCodes.INVALID_PARAMS, 'Missing task ID');
-    }
-    
-    const taskId = params.id as string;
-    const task = this.tasks[taskId];
-    
-    if (!task) {
-      return this.createErrorResponse(id, ErrorCodes.TASK_NOT_FOUND, 'Task not found');
-    }
-    
-    return {
-      jsonrpc: '2.0',
-      id,
-      result: task
-    };
   }
   
   private async handleTaskCancel(id: string | number | null, params?: Record<string, unknown>): Promise<JsonRpcResponse> {
@@ -490,10 +517,21 @@ export class A2AServer {
     // Extract agent identifier from the agent:// URI
     const agentIdentifier = agent.id.replace('agent://', '');
     
+    // Use relative URLs or the provided baseUrl without assumptions
+    let url: string;
+    
+    // If baseUrl is just '/', use a relative URL path
+    if (this.baseUrl === '/') {
+      url = `/${agentIdentifier}`;
+    } else {
+      // Otherwise use the provided base URL (which might be https, custom hostname, etc.)
+      url = `${this.baseUrl}/${agentIdentifier}`;
+    }
+    
     return {
       name: agent.name,
       description: agent.description ?? null,
-      url: agent.id, // Use the original agent ID for test compatibility
+      url: url,
       version: agent.version ?? '1.0.0',
       provider: agent.provider ?? null,
       documentationUrl: agent.documentationUrl ?? null,
@@ -567,7 +605,13 @@ export class A2AServer {
         console.log('Loaded agents:');
         
         for (const agent of Object.values(this.agents)) {
-          console.log(`- ${agent.name} (${agent.id})`);
+          // Convert agent:// URLs to relative or base URLs without assumptions
+          const agentIdentifier = agent.id.replace('agent://', '');
+          const agentUrl = this.baseUrl === '/' 
+            ? `/${agentIdentifier}` 
+            : `${this.baseUrl}/${agentIdentifier}`;
+          
+          console.log(`- ${agent.name} (${agentUrl})`);
         }
         
         console.log('\nReady to receive requests...\n');

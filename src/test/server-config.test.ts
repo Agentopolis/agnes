@@ -54,8 +54,8 @@ describe('A2A Server Configuration', () => {
       .get('/.well-known/agent.json');
     
     expect(res.status).toBe(200);
-    // Use agent:// format which works with Google UI
-    expect(res.body.url).toBe('agent://hello');
+    // Expect the relative URL format
+    expect(res.body.url).toBe('/hello');
   });
 
   it('should use custom BASE_URL if provided', async () => {
@@ -71,8 +71,8 @@ describe('A2A Server Configuration', () => {
       .get('/.well-known/agent.json');
     
     expect(res.status).toBe(200);
-    // Use agent:// format which works with Google UI
-    expect(res.body.url).toBe('agent://hello');
+    // When custom base URL is provided, it should use that
+    expect(res.body.url).toBe(`${customBaseUrl}/hello`);
   });
 });
 

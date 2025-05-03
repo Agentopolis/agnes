@@ -23,7 +23,7 @@ describe('Agnes A2A Server', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.name).toBe('Hello Agent');
-    expect(res.body.url).toBe('agent://hello');
+    expect(res.body.url).toBe('/hello');
     expect(res.body.capabilities).toBeDefined();
     expect(Array.isArray(res.body.skills)).toBe(true);
   });

@@ -36,7 +36,7 @@ describe('AI Client Simulation', () => {
     expect(response.status).toBe(200);
     expect(response.data).toBeDefined();
     expect(response.data.name).toBe('Hello Agent');
-    expect(response.data.url).toBe('agent://hello');
+    expect(response.data.url).toBe('/hello');
     
     // Check agent capabilities
     expect(response.data.capabilities).toBeDefined();
