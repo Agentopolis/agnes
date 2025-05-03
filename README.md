@@ -197,6 +197,41 @@ export const agent: Agent = {
 };
 ```
 
+## 👩‍💻 Contributing
+
+Agnes currently implements a core subset of the A2A specification, but there are several important features that still need to be implemented. We welcome contributions to help complete the implementation!
+
+### 🚧 Features Needing Implementation
+
+1. **Authentication**
+   - Comprehensive API key handling
+   - OAuth support
+   - Token-based authentication
+
+2. **Advanced Messaging Features**
+   - Streaming responses (tasks/sendSubscribe)
+   - Push notifications (pushNotification configs)
+   - Support for non-text content types (files, data structures)
+
+3. **Task Management**
+   - Full state transition history
+   - Task resubscription
+   - More sophisticated task querying
+
+4. **Infrastructure Improvements**
+   - Persistent storage options (beyond in-memory)
+   - Rate limiting and quotas
+   - Enhanced logging and monitoring
+
+If you're interested in contributing:
+
+1. Check the [issues page](https://github.com/yourusername/agnes/issues) for open tasks
+2. Fork the repository and create a feature branch
+3. Implement your changes with appropriate tests
+4. Submit a pull request with clear documentation of your changes
+
+We particularly welcome contributions that enhance Agnes's compliance with the A2A specification while maintaining its simplicity and developer-friendly approach.
+
 ### 🧪 Running tests
 
 Agnes includes a comprehensive test suite for both the server and individual agents:
