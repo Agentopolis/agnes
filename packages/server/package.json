@@ -1,13 +1,13 @@
 {
   "name": "@agentopolis/agnes-server",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Agnes A2A Server Runtime",
-  "main": "dist/server.js",
+  "main": "dist/server.mjs",
   "types": "dist/server.d.ts",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsup src/server.ts --format esm --dts",
+    "build": "tsup src/server.ts --format esm --dts && mv dist/server.js dist/server.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },
