@@ -146,8 +146,6 @@ The deployment process:
 4. Pushes the Docker container to Heroku
 5. Releases the application
 
-**Note:** Agnes no longer tries to guess the Heroku URL - it relies entirely on the `BASE_URL` environment variable, which must be correctly set to enable agent endpoints and proper agent card URLs.
-
 ## 👷‍♀️ Creating new agents
 
 Agents are located in the `src/agents` directory. Each agent has its own subdirectory with an `index.ts` file that exports an agent object.

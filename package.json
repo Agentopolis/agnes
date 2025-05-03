@@ -3,8 +3,8 @@
   "private": true,
   "scripts": {
     "build": "tsc",
-    "dev": "tsx src/server.ts --port 7777",
-    "dev:watch": "nodemon --watch src --ext ts,json --exec 'tsx src/server.ts --port 7777'",
+    "dev": "NODE_ENV=development tsx src/server.ts --port 7777",
+    "dev:watch": "NODE_ENV=development nodemon --watch src --ext ts,json --exec 'tsx src/server.ts --port 7777'",
     "start": "node dist/server.js",
     "test": "vitest",
     "test:all": "vitest run",
