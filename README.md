@@ -99,6 +99,20 @@ The Docker container will use the `.env` file in the project root for configurat
 
 Agnes can also be deployed to Heroku using Docker containers:
 
+### Prerequisites
+
+Before deploying to Heroku, you need to:
+
+1. [Create a Heroku account](https://signup.heroku.com/) if you don't have one already
+2. Install the [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli)
+3. Create a new Heroku app using the Heroku dashboard or CLI:
+   ```bash
+   heroku create your-app-name
+   ```
+4. Note the generated app URL (e.g., `https://your-app-name-abc123.herokuapp.com`)
+
+Once you have created your Heroku app, proceed with the setup below.
+
 ### Setup for Heroku
 
 Before deploying to Heroku, create a `.env.heroku` file in the project root with the following content:
@@ -118,16 +132,19 @@ BASE_URL=https://your-heroku-app-name.herokuapp.com
 npm run heroku:deploy
 
 # Individual steps if needed:
-npm run heroku:config   # Set the BASE_URL in Heroku config
-npm run heroku:push     # Build and push the Docker container
-npm run heroku:release  # Release the container
+npm run heroku:login         # Log in to Heroku CLI
+npm run heroku:container:login # Log in to Heroku Container Registry
+npm run heroku:config        # Set the BASE_URL in Heroku config
+npm run heroku:push          # Push the Docker container to Heroku
+npm run heroku:release       # Release the container
 ```
 
 The deployment process:
 1. Builds the TypeScript application
-2. Sets environment variables in Heroku (especially the crucial BASE_URL)
-3. Pushes the Docker container to Heroku
-4. Releases the application
+2. Logs in to Heroku CLI and Container Registry
+3. Sets environment variables in Heroku (especially the crucial BASE_URL)
+4. Pushes the Docker container to Heroku
+5. Releases the application
 
 **Note:** Agnes no longer tries to guess the Heroku URL - it relies entirely on the `BASE_URL` environment variable, which must be correctly set to enable agent endpoints and proper agent card URLs.
 
