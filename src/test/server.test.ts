@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
-import { A2AServer } from './server';
+import { A2AServer } from '../server';
 
 describe('Agnes A2A Server', () => {
   let server: A2AServer;
@@ -127,4 +127,4 @@ describe('Agnes A2A Server', () => {
     expect(res.body.error).toBeDefined();
     expect(res.body.error.code).toBe(-32600); // Invalid request
   });
-});
+}); 

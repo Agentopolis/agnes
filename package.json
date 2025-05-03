@@ -6,7 +6,10 @@
     "dev": "tsx src/server.ts",
     "start": "node dist/server.js",
     "test": "vitest",
+    "test:all": "vitest run",
     "test:client": "vitest run src/test/ai-client.test.ts",
+    "test:agents": "vitest run src/test/agents/",
+    "test:server": "vitest run src/test/server.test.ts",
     "client:demo": "tsx src/clients/run-client.ts"
   },
   "devDependencies": {
