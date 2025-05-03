@@ -5,7 +5,7 @@
     "build": "tsc",
     "dev": "tsx src/server.ts --port 7777",
     "dev:watch": "nodemon --watch src --ext ts,json --exec 'tsx src/server.ts --port 7777'",
-    "start": "node dist/server.js",
+    "start": "NODE_ENV=production node dist/server.js",
     "test": "vitest",
     "test:all": "vitest run",
     "test:client": "vitest run src/test/ai-client.test.ts",
@@ -13,7 +13,10 @@
     "test:server": "vitest run src/test/server.test.ts",
     "test:config": "vitest run src/test/server-config.test.ts",
     "test:spec": "vitest run src/test/a2a-spec.test.ts",
-    "client:demo": "tsx src/clients/run-client.ts"
+    "client:demo": "tsx src/clients/run-client.ts",
+    "docker:build": "docker build -t agnes-server .",
+    "docker:run": "docker run --rm --name agnes-server-container -p 7777:7777 --env-file .env agnes-server",
+    "docker:stop": "docker stop agnes-server-container"
   },
   "devDependencies": {
     "@types/node": "^20.11.30",

@@ -9,6 +9,7 @@ import type { IncomingMessage, ServerResponse, Server } from 'node:http';
 import type { Agent, Message, AgentContext } from './types/agent';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 // Define error codes according to the JSON-RPC spec
 export const ErrorCodes = {
@@ -558,35 +559,50 @@ export class A2AServer {
   
   // Load all agents from the agents directory
   public async loadAgents(): Promise<void> {
-    const agentsDir = path.join(__dirname, 'agents');
+    const isProduction = process.env.NODE_ENV === 'production';
+    const fileExtension = isProduction ? '.js' : '.ts';
+    // In prod (__dirname is dist/), agents are relative.
+    // In dev (__dirname is src/), agents are relative.
+    const agentsRelativePath = 'agents'; 
+    const agentsDir = path.join(__dirname, agentsRelativePath);
+    
+    debugLog(`Loading agents from: ${agentsDir} (runtime: ${isProduction ? 'production' : 'development'}, extension: ${fileExtension})`);
     
     try {
       const agentFolders = await fs.readdir(agentsDir);
       
       for (const folder of agentFolders) {
-        const agentPath = path.join(agentsDir, folder, 'index.ts');
+        const agentIndexFile = `index${fileExtension}`;
+        const agentPath = path.join(agentsDir, folder, agentIndexFile);
         
         try {
-          // Check if the file exists
+          // Check if the index file exists
           await fs.access(agentPath);
           
-          // Import the agent
-          const { agent } = await import(agentPath);
+          // Dynamically import the agent module
+          const agentModuleUrl = pathToFileURL(agentPath).href;
+          debugLog(`Attempting to import agent module: ${agentModuleUrl}`);
+          const { agent } = await import(agentModuleUrl);
           
           if (agent?.id && agent.handlers?.send) {
             this.agents[agent.id] = agent;
-            console.log(`Loaded agent: ${agent.id}`);
+            console.log(`✅ Loaded agent: ${agent.id}`);
           } else {
-            console.warn(`Invalid agent in ${folder}: missing required properties`);
+            console.warn(`🔶 Invalid agent structure in ${folder}/${agentIndexFile}: missing required properties (id, name, handlers.send)`);
           }
         } catch (err) {
-          console.warn(`Failed to load agent from ${folder}:`, err);
+          console.warn(`🔶 Failed to load agent from ${folder}:`, err);
         }
       }
       
-      console.log(`Loaded ${Object.keys(this.agents).length} agents`);
+      console.log(`
+✅ Loaded ${Object.keys(this.agents).length} agents successfully.`);
     } catch (err) {
-      console.error('Failed to load agents:', err);
+      if (err instanceof Error && (err as NodeJS.ErrnoException).code === 'ENOENT') {
+        console.warn(`🔶 Agents directory not found at ${agentsDir}. No agents loaded. ${isProduction ? 'Did you run \'npm run build\'?' : ''}`);
+      } else {
+        console.error('❌ Failed to load agents:', err);
+      }
     }
   }
   
