@@ -1,3 +1,9 @@
+// Import dotenv at the top of the file
+import dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config();
+
 import http from 'node:http';
 import type { IncomingMessage, ServerResponse, Server } from 'node:http';
 import type { Agent, Message, AgentContext } from './types/agent';
