@@ -53,8 +53,9 @@ interface TaskStorage {
     status: {
       state: 'submitted' | 'working' | 'input-required' | 'completed' | 'canceled' | 'failed' | 'unknown';
       timestamp: string;
+      message?: Message;
     };
-    history: unknown[];
+    history: Message[];
     artifacts?: unknown[];
   };
 }
@@ -440,11 +441,15 @@ export class A2AServer {
         // Success case
         this.tasks[taskId].status = {
           state: 'completed',
+          message: response.message,
           timestamp: new Date().toISOString()
         };
         
         // Add response to history
-        this.tasks[taskId].history.push(response.message);
+        if (!Array.isArray(this.tasks[taskId].history)) {
+            this.tasks[taskId].history = [];
+        }
+        (this.tasks[taskId].history as Message[]).push(response.message);
         
         return {
           jsonrpc: '2.0',
@@ -452,17 +457,8 @@ export class A2AServer {
           result: {
             id: taskId,
             status: this.tasks[taskId].status,
-            history: this.tasks[taskId].history, // Explicitly include history
-            artifacts: [
-              {
-                parts: [
-                  {
-                    type: 'text',
-                    text: response.message.parts[0].text // Just use the text directly
-                  }
-                ]
-              }
-            ]
+            history: this.tasks[taskId].history,
+            artifacts: this.tasks[taskId].artifacts || []
           }
         };
       }
@@ -525,22 +521,16 @@ export class A2AServer {
   }
   
   private generateAgentCard(agent: Agent) {
-    // Generate an A2A compatible agent card
-    // Extract agent identifier from the agent:// URI
     const agentIdentifier = agent.id.replace('agent://', '');
-    
-    // Use relative URLs or the provided baseUrl without assumptions
     let url: string;
-    
-    // If baseUrl is just '/', use a relative URL path
     if (this.baseUrl === '/') {
       url = `/${agentIdentifier}`;
     } else {
-      // Otherwise use the provided base URL (which might be https, custom hostname, etc.)
       url = `${this.baseUrl}/${agentIdentifier}`;
     }
-    
+
     return {
+      id: agent.id,
       name: agent.name,
       description: agent.description ?? null,
       url: url,

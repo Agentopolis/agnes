@@ -2,7 +2,7 @@
   "name": "agnes",
   "private": true,
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && copyfiles -u 1 \"src/agents/**/!(*.ts)\" dist",
     "dev": "NODE_ENV=development tsx src/server.ts --port 7777",
     "dev:watch": "NODE_ENV=development nodemon --watch src --ext ts,json --exec 'tsx src/server.ts --port 7777'",
     "start": "node dist/server.js",
